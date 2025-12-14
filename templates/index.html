@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crypto Dashboard</title>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: #0d0f15;
+        color: #fff;
+        display: flex;
+      }
+
+      /* LEFT SIDEBAR */
+      .sidebar {
+        width: 300px;
+        background: #131722;
+        min-height: 100vh;
+        padding: 30px 20px;
+        position: fixed;
+        left: 0;
+        top: 0;
+        box-shadow: 3px 0 10px rgba(0, 0, 0, 0.4);
+      }
+
+      .sidebar h2 {
+        color: #00d1ff;
+      }
+      .sidebar h3 {
+        color: #00a8cc;
+        border-bottom: 1px solid #2d3348;
+        padding-bottom: 6px;
+        margin-top: 20px;
+      }
+      .sidebar ul {
+        padding-left: 20px;
+        line-height: 28px;
+      }
+
+      /* MAIN AREA */
+      .main {
+        margin-left: 320px;
+        width: calc(100% - 320px);
+        padding: 30px 40px;
+      }
+
+      .box {
+        background: #131722;
+        padding: 25px;
+        border-radius: 14px;
+        margin-bottom: 30px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      }
+
+      h2 {
+        margin-top: 0;
+        color: #00d1ff;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+      th,
+      td {
+        text-align: center;
+        padding: 12px;
+      }
+      thead {
+        background: #0f121b;
+      }
+      tbody tr {
+        border-bottom: 1px solid #222;
+      }
+      tbody tr:hover {
+        background: #1b1f2d;
+      }
+
+      .btn {
+        background: #00d1ff;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .btn:hover {
+        background: #00a8cc;
+      }
+
+      .green {
+        color: #00ff91;
+      }
+      .red {
+        color: #ff4f4f;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <h2>Project Module</h2>
+
+      <h3>Module: Data Acquisition</h3>
+      <ul>
+        <li>Fetch live crypto data</li>
+        <li>CoinGecko API</li>
+        <li>CSV logging every 30s</li>
+        <li>BTC trend + volatility</li>
+      </ul>
+
+      <h3>Technologies</h3>
+      <ul>
+        <li>Flask</li>
+        <li>Python</li>
+        <li>Chart.js</li>
+        <li>Pandas</li>
+        <li>APScheduler</li>
+      </ul>
+
+      <h3>Outputs</h3>
+      <ul>
+        <li>Live Crypto Table</li>
+        <li>BTC Volatility Chart</li>
+        <li>7-Day BTC Trend</li>
+        <li>PPTX Report</li>
+      </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+      <div class="box">
+        <h2>Crypto Data Fetcher</h2>
+        <button class="btn" onclick="loadData()">Refresh Data</button>
+        <a class="btn" href="/pptx" target="_blank">Download Report</a>
+        <p id="updatedTime">Last Updated: --</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Cryptocurrency</th>
+              <th>Price (USD)</th>
+              <th>24h Change</th>
+              <th>Volume</th>
+            </tr>
+          </thead>
+          <tbody id="cryptoTable"></tbody>
+        </table>
+      </div>
+
+      <!-- BTC Trend Chart -->
+      <!-- <div class="box">
+            <h2>7-Day BTC Price Trend</h2>
+            <canvas id="btcChart"></canvas>
+        </div> -->
+
+      <div class="box">
+        <h2>BTC Volatility (CSV-based)</h2>
+        <a class="btn" href="/chart/BTC" target="_blank"
+          >Open BTC Volatility Chart</a
+        >
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      let btcChart;
+
+      function loadData() {
+        fetch("/data")
+          .then((res) => res.json())
+          .then((data) => {
+            let html = "";
+
+            data.forEach((c) => {
+              const cls = c.change >= 0 ? "green" : "red";
+
+              html += `
+                            <tr>
+                                <td>${c.name} (${c.symbol})</td>
+                                <td>$${c.price}</td>
+                                <td class="${cls}">${c.change}%</td>
+                                <td>${c.volume.toLocaleString()}</td>
+                            </tr>`;
+            });
+
+            document.getElementById("cryptoTable").innerHTML = html;
+            document.getElementById("updatedTime").innerText =
+              "Last Updated: " + new Date().toLocaleTimeString();
+          });
+      }
+
+      // function loadBTCChart() {
+      //     fetch("/btc_history")
+      //         .then(res => res.json())
+      //         .then(data => {
+      //             const labels = data.map(d => d.date);
+      //             const prices = data.map(d => d.price);
+
+      //             const ctx = document.getElementById("btcChart").getContext("2d");
+
+      //             if (btcChart) btcChart.destroy();
+
+      //             btcChart = new Chart(ctx, {
+      //                 type: "line",
+      //                 data: {
+      //                     labels: labels,
+      //                     datasets: [{
+      //                         label: "BTC Price (USD)",
+      //                         data: prices,
+      //                         borderColor: "#00d1ff",
+      //                         borderWidth: 2,
+      //                         fill: false,
+      //                         tension: 0.3
+      //                     }]
+      //                 },
+      //                 options: {
+      //                     responsive: true,
+      //                     scales: {
+      //                         y: { beginAtZero: false }
+      //                     }
+      //                 }
+      //             });
+      //         });
+      // }
+
+      loadData();
+      loadBTCChart();
+    </script>
+  </body>
+</html>
